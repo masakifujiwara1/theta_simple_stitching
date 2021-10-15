@@ -20,22 +20,14 @@ class simple_stitching:
     self.image_sub = rospy.Subscriber(sub_image_topic_name, Image, self.callback)
 
 
-  def callback(self,data):
-    try:
-      image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-    except CvBridgeError as e:
-      print(e)
-
-    image_s = cv2.resize(image, (1280,720))
-
     vertex = 640
     src_cx = 319
     src_cy = 319
     src_r = 283
     src_cx2 = 1280 - src_cx
 
-    map_x = np.zeros((vertex,vertex*2))
-    map_y = np.zeros((vertex,vertex*2))
+    self.map_x = np.zeros((vertex,vertex*2))
+    self.map_y = np.zeros((vertex,vertex*2))
     for y in range(vertex):
         for x in range(vertex*2):
             phi1 = math.pi * x / vertex
@@ -66,8 +58,8 @@ class simple_stitching:
                     r_ = math.sin(phi2)
                 elif method == 4:
                     r_ = 1 - math.sin(math.pi / 2 - phi2)
-                map_x[y,x] = src_r * r_ * math.cos(theta2) + src_cx
-                map_y[y,x] = src_r * r_ * math.sin(theta2) + src_cy
+                self.map_x[y,x] = src_r * r_ * math.cos(theta2) + src_cx
+                self.map_y[y,x] = src_r * r_ * math.sin(theta2) + src_cy
             else:
                 if method == 0:
                     r_ = (math.pi - phi2) / math.pi * 2
@@ -79,13 +71,23 @@ class simple_stitching:
                     r_ = math.sin(math.pi - phi2)
                 elif method == 4:
                     r_ = 1 - math.sin(- math.pi / 2 + phi2)
-                map_x[y,x] = src_r * r_ * math.cos(math.pi - theta2) + src_cx2
-                map_y[y,x] = src_r * r_ * math.sin(math.pi - theta2) + src_cy
+                self.map_x[y,x] = src_r * r_ * math.cos(math.pi - theta2) + src_cx2
+                self.map_y[y,x] = src_r * r_ * math.sin(math.pi - theta2) + src_cy
 
-    map_x = map_x.astype('float32')
-    map_y = map_y.astype('float32')
+    self.map_x = self.map_x.astype('float32')
+    self.map_y = self.map_y.astype('float32')
+    print("finish init for theta simple stitching")
 
-    image2 = cv2.remap( image_s, map_x, map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
+
+  def callback(self,data):
+    try:
+      image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+    except CvBridgeError as e:
+      print(e)
+
+    image_s = cv2.resize(image, (1280,720))
+
+    image2 = cv2.remap( image_s, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
 
     try:
       self.image_pub.publish(self.bridge.cv2_to_imgmsg(image2, "bgr8"))
