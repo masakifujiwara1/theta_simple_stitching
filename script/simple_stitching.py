@@ -1,6 +1,7 @@
 import rospy
 import cv2
 import numpy as np
+import math
 import rosparam
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -8,7 +9,7 @@ from cv_bridge import CvBridge, CvBridgeError
 class simple_stitching:
   def __init__(self):
     try:
-        sub_image_topic_name = rosparam.get_param("simple_stitching/sub_image_topic_name")
+        sub_image_topic_name = rosparam.get_param("theta_simple_stitching/sub_image_topic_name")
     except:
         rospy.logwarn("subscribe /image_raw because rosparam is not set")
         sub_image_topic_name = "/image_raw"
@@ -20,16 +21,10 @@ class simple_stitching:
 
   def callback(self,data):
     try:
-      cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+      image = self.bridge.imgmsg_to_cv2(data, "bgr8")
     except CvBridgeError as e:
       print(e)
 
-def cv_imshow(image_bgr):
-    image_rgb = cv2.cvtColor(image_bgr,cv2.COLOR_BGR2RGB)
-    plt.imshow(image_rgb)
-    plt.show()
-
-image = cv2.imread('input.jpg')
     image_s = cv2.resize(image, (1280,720))
 
     vertex = 640
@@ -37,7 +32,6 @@ image = cv2.imread('input.jpg')
     src_cy = 319
     src_r = 283
     src_cx2 = 1280 - src_cx
-
 
     map_x = np.zeros((vertex,vertex*2))
     map_y = np.zeros((vertex,vertex*2))
@@ -93,12 +87,12 @@ image = cv2.imread('input.jpg')
     image2 = cv2.remap( image_s, map_x, map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
 
     try:
-      self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image2, "bgr8"))
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(image2, "bgr8"))
     except CvBridgeError as e:
       print(e)
 
 
-def main(args):
+def main():
   ss = simple_stitching()
   rospy.init_node('theta_simple_stitching')
   try:
@@ -108,4 +102,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv) 
+    main()

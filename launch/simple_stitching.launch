@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <node pkg="simple_stitching" type="simple_stitching.py" name="theta_simple_stitching" output="screen">
-        <remap from="sub_image_topic_name" to="/image_raw"/>
+    <node pkg="theta_simple_stitching" type="simple_stitching.py" name="theta_simple_stitching" output="screen">
+        <param name="sub_image_topic_name" value="/image_raw"/>
     </node>
 </launch>
