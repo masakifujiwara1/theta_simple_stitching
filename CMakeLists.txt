@@ -13,7 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   geometry_msgs
+  image_transport
+  cv_bridge
 )
+find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -51,8 +54,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 #add_message_files(
 #  FILES
-#  Scenario.msg
-#  Hypothesis.msg
 #)
 
 ## Generate services in the 'srv' folder
@@ -120,6 +121,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -208,4 +210,15 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-
+add_library(
+ ${PROJECT_NAME} src/simple_stitching.cpp
+)
+add_executable(
+ simple_stitching
+ src/simple_stitching.cpp
+)
+target_link_libraries(
+ simple_stitching
+ ${catkin_LIBRARIES}
+ ${OpenCV_LIBRARIES}
+)
