@@ -88,9 +88,11 @@ class simple_stitching:
     image_s = cv2.resize(image, (1280,720))
 
     image2 = cv2.remap( image_s, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
+    msg_for_send = self.bridge.cv2_to_imgmsg(image2, "bgr8")
+    msg_for_send.header = data.header
 
     try:
-      self.image_pub.publish(self.bridge.cv2_to_imgmsg(image2, "bgr8"))
+      self.image_pub.publish(msg_for_send)
     except CvBridgeError as e:
       print(e)
 
