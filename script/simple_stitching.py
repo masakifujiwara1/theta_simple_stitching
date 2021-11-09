@@ -96,7 +96,6 @@ class simple_stitching:
         image2[:, :1280/2,:] = tmp[:, 1280/2:,:]
         image2[:, 1280/2:,:] = tmp[:, :1280/2,:]
 
-
     msg_for_send = self.bridge.cv2_to_imgmsg(image2, "bgr8")
     msg_for_send.header = data.header
 
