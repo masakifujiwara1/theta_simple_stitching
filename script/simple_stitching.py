@@ -14,11 +14,15 @@ class simple_stitching:
     except:
         rospy.logwarn("subscribe /image_raw because rosparam is not set")
         sub_image_topic_name = "/image_raw"
+    try:
+        self.reverse = rosparam.get_param("theta_simple_stitching/reverse")
+    except:
+        rospy.logwarn("image is not reversed")
+        self.reverse = False
 
     self.image_pub = rospy.Publisher("/image/mercator", Image, queue_size=1)
     self.bridge = CvBridge()
     self.image_sub = rospy.Subscriber(sub_image_topic_name, Image, self.callback)
-
 
     vertex = 640
     src_cx = 319
@@ -86,11 +90,18 @@ class simple_stitching:
       print(e)
 
     image_s = cv2.resize(image, (1280,720))
-
     image2 = cv2.remap( image_s, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
+    if(self.reverse):
+        tmp = image2.copy()
+        image2[:, :1280/2,:] = tmp[:, 1280/2:,:]
+        image2[:, 1280/2:,:] = tmp[:, :1280/2,:]
+
+
+    msg_for_send = self.bridge.cv2_to_imgmsg(image2, "bgr8")
+    msg_for_send.header = data.header
 
     try:
-      self.image_pub.publish(self.bridge.cv2_to_imgmsg(image2, "bgr8"))
+      self.image_pub.publish(msg_for_send)
     except CvBridgeError as e:
       print(e)
 
