@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import cv2
 import numpy as np
@@ -10,10 +10,12 @@ from cv_bridge import CvBridge, CvBridgeError
 class simple_stitching:
   def __init__(self):
     try:
-        sub_image_topic_name = rosparam.get_param("theta_simple_stitching/sub_image_topic_name")
+        sub_image1_topic_name = rosparam.get_param("theta_simple_stitching/sub_image1_topic_name")
+        sub_image2_topic_name = rosparam.get_param("theta_simple_stitching/sub_image2_topic_name")
     except:
         rospy.logwarn("subscribe /image_raw because rosparam is not set")
-        sub_image_topic_name = "/image_raw"
+        sub_image1_topic_name = "/image1_raw"
+        sub_image2_topic_name = "/image2_raw"
     try:
         self.reverse = rosparam.get_param("theta_simple_stitching/reverse")
     except:
@@ -22,12 +24,15 @@ class simple_stitching:
 
     self.image_pub = rospy.Publisher("/image/mercator", Image, queue_size=1)
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber(sub_image_topic_name, Image, self.callback)
+    self.image1_sub = rospy.Subscriber(sub_image1_topic_name, Image, self.image1_callback)
+    self.image2_sub = rospy.Subscriber(sub_image2_topic_name, Image, self.image2_callback)
+    self.image_s1 = np.array
+    self.image_s2 = np.array
 
     vertex = 640
     src_cx = 319
     src_cy = 319
-    src_r = 283
+    src_r = 319 #283
     src_cx2 = 1280 - src_cx
 
     self.map_x = np.zeros((vertex,vertex*2))
@@ -83,21 +88,32 @@ class simple_stitching:
     print("finish init for theta simple stitching")
 
 
-  def callback(self,data):
+  def image1_callback(self,data):
     try:
-      image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+      image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
     except CvBridgeError as e:
       print(e)
 
-    image_s = cv2.resize(image, (1280,720))
-    image2 = cv2.remap( image_s, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
-    if(self.reverse):
-        tmp = image2.copy()
-        image2[:, :1280/2,:] = tmp[:, 1280/2:,:]
-        image2[:, 1280/2:,:] = tmp[:, :1280/2,:]
+    self.image_s1 = cv2.resize(image1, (640,640))
 
-    msg_for_send = self.bridge.cv2_to_imgmsg(image2, "bgr8")
-    msg_for_send.header = data.header
+  def image2_callback(self,data):
+    try:
+      image2 = self.bridge.imgmsg_to_cv2(data, "bgr8")
+    except CvBridgeError as e:
+      print(e)
+
+    self.image_s2 = cv2.resize(image2, (640,640))
+    
+  def stitching(self):
+    image_cat = cv2.hconcat([self.image_s1, self.image_s2])
+    image_remap = cv2.remap( image_cat, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
+    if(self.reverse):
+        tmp = image_remap.copy()
+        image_remap[:, :1280/2,:] = tmp[:, 1280/2:,:]
+        image_remap[:, 1280/2:,:] = tmp[:, :1280/2,:]
+
+    msg_for_send = self.bridge.cv2_to_imgmsg(image_remap, "bgr8")
+    # msg_for_send.header = Image.header
 
     try:
       self.image_pub.publish(msg_for_send)
@@ -105,14 +121,19 @@ class simple_stitching:
       print(e)
 
 
-def main():
-  ss = simple_stitching()
-  rospy.init_node('theta_simple_stitching')
-  try:
-    rospy.spin()
-  except KeyboardInterrupt:
-    print("Shutting down")
+# def main():
+#   rospy.init_node('theta_simple_stitching')
+#   ss = simple_stitching()
+#   try:
+#     rospy.spin()
+#   except KeyboardInterrupt:
+#     print("Shutting down")
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    rospy.init_node('theta_simple_stitching')
+    ss = simple_stitching()
+    rospy.wait_for_message("/camera/rgb/image_raw_front", Image)
+    while not rospy.is_shutdown():
+        ss.stitching()
