@@ -120,20 +120,10 @@ class simple_stitching:
     except CvBridgeError as e:
       print(e)
 
-
-# def main():
-#   rospy.init_node('theta_simple_stitching')
-#   ss = simple_stitching()
-#   try:
-#     rospy.spin()
-#   except KeyboardInterrupt:
-#     print("Shutting down")
-
-
 if __name__ == '__main__':
-    # main()
     rospy.init_node('theta_simple_stitching')
     ss = simple_stitching()
     rospy.wait_for_message("/camera/rgb/image_raw_front", Image)
     while not rospy.is_shutdown():
         ss.stitching()
+        
