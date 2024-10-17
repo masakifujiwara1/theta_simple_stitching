@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="theta_simple_stitching" type="simple_stitching.py" name="theta_simple_stitching" output="screen">
+	<param name="sub_image1_topic_name" value="/camera/rgb/image_raw_front"/>
+        <param name="sub_image2_topic_name" value="/camera/rgb/image_raw_back"/>
+        <param name="reverse" value="False"/>
+    </node>
+    <node pkg="theta_simple_stitching" type="compressed.py" name="theta_simple_stitching_compressed" output="screen"/>
+</launch>
