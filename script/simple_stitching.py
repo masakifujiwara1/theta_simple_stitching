@@ -124,6 +124,8 @@ if __name__ == '__main__':
     rospy.init_node('theta_simple_stitching')
     ss = simple_stitching()
     rospy.wait_for_message("/camera/rgb/image_raw_front", Image)
+    rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         ss.stitching()
+        rate.sleep()
         
