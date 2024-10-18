@@ -5,4 +5,5 @@
         <param name="sub_image_topic_name" value="/theta/image_raw"/>
         <param name="reverse" value="False"/>
     </node>
+    <node pkg="theta_simple_stitching" type="compressed.py" name="theta_simple_stitching_compressed" output="screen"/>
 </launch>
