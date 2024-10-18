@@ -90,7 +90,10 @@ class simple_stitching:
       print(e)
 
     image_s = cv2.resize(image, (1280,720))
-    image2 = cv2.remap( image_s, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
+    try:
+      image2 = cv2.remap( image_s, self.map_x, self.map_y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT);
+    except:
+      return
     if(self.reverse):
         tmp = image2.copy()
         image2[:, :1280/2,:] = tmp[:, 1280/2:,:]
@@ -106,8 +109,8 @@ class simple_stitching:
 
 
 def main():
-  ss = simple_stitching()
   rospy.init_node('theta_simple_stitching')
+  ss = simple_stitching()
   try:
     rospy.spin()
   except KeyboardInterrupt:
